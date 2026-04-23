@@ -3,7 +3,6 @@ from lookup import Lookup
 
 def create_V(seq):
     V_matrix = np.full((len(seq), len(seq)), np.inf)
-    print(V_matrix)
     VM_matrix = np.full((len(seq), len(seq)), np.inf)
     lookup = Lookup()
     m = 3
@@ -53,7 +52,8 @@ def create_V(seq):
     return V_matrix
 
 def is_valid_pair(c0, c1):
-    return (c0 == 'C' and c1 == 'G') or (c0 == 'G' and c1 == 'C') or (c0 == 'A' and c1 == 'U') or (c0 == 'U' and c1 == 'A') or (c0 == 'G' and c1 == 'U') or (c0 == 'U' and c1 == 'G')
+    p = "".join(sorted(c0 + c1))
+    return p in ('CG', 'AU', 'GU')
 
 def W(i, j):
     """assuming closed loop"""
