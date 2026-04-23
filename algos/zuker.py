@@ -71,6 +71,11 @@ def zukers(seq):
     W = create_W(seq, V)
     return W[0, len(seq) - 1]
 
-#if '__name__' == 'main':
-RNA = 'AUAUAUAU'
-print(create_V(RNA).shape)
+if __name__ == "__main__":
+    true_w = -1.8 # change
+    RNA = 'AUAUAUAU'
+    V = create_V(RNA)
+    assert true_w == V[0][0], 'Wrong W[0][0]'
+    print(V.shape)
+    # RNA = 'AUCGCAU'
+    # print(create_V(RNA).shape)
