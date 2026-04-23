@@ -3,61 +3,74 @@ from lookup import Lookup
 
 def create_V(seq):
     V_matrix = np.full((len(seq), len(seq)), np.inf)
-    VM_matrix = np.full((len(seq), len(seq)), np.inf)
+    WM_matrix = np.full(len(seq), len(seq), np.inf)
     lookup = Lookup()
-    m = 3
     for i in range(len(seq) - 1, -1, -1):
-        for j in range(i + m, len(seq)):
-            print(i,j)
+        for j in range(i + 3, len(seq)):
             if not is_valid_pair(seq[i], seq[j]):
-                V_matrix[i][j] = float('inf')
                 continue
             
-            hairpin = float('inf')
-            stacking = float('inf')
-            internal = float('inf')
+            hairpin = np.inf
+            stacking = np.inf
+            internal = np.inf
+            multiloop = np.inf
 
-            size = j - i - 1
             # hairpin
-            # if size > 3:
-            hairpin = lookup.hairpin(size)
-            print('hairpin', hairpin)
+            size = j - i - 1
+            if size > 3:
+                hairpin = lookup.hairpin(size)
             
             # stacking
-            stacking = lookup.stack(seq[i + 1], seq[j - 1], seq[i], seq[j]) + V_matrix[i + 1][j - 1]
-            print('stack', stacking)
-            # internal + bulge loops
+            stacking = lookup.stack(seq[i], seq[i+1], seq[j], seq[j-1])
+            
+            # internal + buldge loops
             for k in range(i+1, j):
                 for l in range(k+1, j):
-                    if is_valid_pair(seq[k], seq[l]):
+                    if is_valid_pair(k, l):
                         a = k - i - 1
                         b = j - l - 1
                         if a == 0 or b == 0:
-                            loopE = lookup.bulge(b - a)
+                            loopE = lookup.bulge(a + b)
                         else:
-                            loopE = lookup.internal(b - a)  # include seq
+                            loopE = lookup.bulge(a + b)
+
                         internal = min(internal, V_matrix[k][l] + loopE)
-                        print('internal', internal)
             
             # multiloop
-            """
-            j_unpair = VM[i, j - 1]
-            i_unpair = VM[i + 1, j]
-            closed = V
-            """
+            # non_closed used for the WM calculation after
+            non_closed = np.inf
 
-            V_matrix[i][j] = min(hairpin, stacking, internal)
-
-    print(V_matrix)
-    return V_matrix
+            for k in range(i + 1, j):
+                multiloop = min(multiloop, WM_matrix[i+1, k] + WM_matrix[k+1, j-1] + 9.3)
+                non_closed = min(non_closed, WM_matrix[i, k] + WM_matrix[k+1, j]) 
+            
+            # assign V_matrix at (i, j)
+            V_matrix[i][j] = min(hairpin, stacking, internal, multiloop)
+            
+            # assign WM at (i, j)
+            j_unpaired = WM_matrix[i][j-1]
+            i_unpaired = WM_matrix[i+1][j]
+            closed = V_matrix[i][j] - 0.6
+            WM_matrix = min(j_unpaired, i_unpaired, closed, non_closed)
 
 def is_valid_pair(c0, c1):
     p = "".join(sorted(c0 + c1))
     return p in ('CG', 'AU', 'GU')
 
-def W(i, j):
-    """assuming closed loop"""
-    pass
+def create_W(seq, V):
+    W_matrix = np.zeros(len(seq), len(seq))
+    for i in range(len(seq) - 1, -1, -1):
+        for j in range(i + 3, len(seq)):
+            j_paired = np.inf
+            for k in range(i, j - 3):
+                j_paired = min(j_paired, W_matrix[i, k-1] + V[k, j])
+            W_matrix[i, j] = min(W_matrix[i, j-1], j_paired)
+    return W_matrix
+
+def zukers(seq):
+    V = create_V(seq)
+    W = create_W(seq, V)
+    return W[0, len(seq) - 1]
 
 if __name__ == "__main__":
     true_w = -1.8 # change
