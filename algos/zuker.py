@@ -1,42 +1,44 @@
 import numpy as np
+from lookup import Lookup
 
 def create_V(seq):
-    V_matrix = np.zeros((len(seq), len(seq)), np.inf)
-    VM_matrix = np.full(len(seq), len(seq), np.inf)
+    V_matrix = np.full((len(seq), len(seq)), np.inf)
+    print(V_matrix)
+    VM_matrix = np.full((len(seq), len(seq)), np.inf)
+    lookup = Lookup()
+    m = 3
     for i in range(len(seq) - 1, -1, -1):
-        for j in range(i + 3, len(seq)):
-            loop = {'hairpin'}
-            stack = {}
-
+        for j in range(i + m, len(seq)):
+            print(i,j)
             if not is_valid_pair(seq[i], seq[j]):
-                return float('inf')
+                V_matrix[i][j] = float('inf')
+                continue
             
             hairpin = float('inf')
             stacking = float('inf')
             internal = float('inf')
 
-            # hairpin
             size = j - i - 1
-            if size > 3:
-                hairpin = loop['hairpin'][size]
+            # hairpin
+            # if size > 3:
+            hairpin = lookup.hairpin(size)
+            print('hairpin', hairpin)
             
             # stacking
-            stacking = stack[seq[i + 1]][seq[j - 1]][seq[i]][seq[j]] + V_matrix[i + 1][j - 1]
-            
-            # internal + buldge loops
+            stacking = lookup.stack(seq[i + 1], seq[j - 1], seq[i], seq[j]) + V_matrix[i + 1][j - 1]
+            print('stack', stacking)
+            # internal + bulge loops
             for k in range(i+1, j):
                 for l in range(k+1, j):
-
-                    if is_valid_pair(k, l):
+                    if is_valid_pair(seq[k], seq[l]):
                         a = k - i - 1
                         b = j - l - 1
-
                         if a == 0 or b == 0:
-                            loopE = bulge_energy(a, b)
+                            loopE = lookup.bulge(b - a)
                         else:
-                            loopE = internal_loop_energy(a, b, seq)
-
-                        internal = min(internal, V[k][l] + loopE)
+                            loopE = lookup.internal(b - a)  # include seq
+                        internal = min(internal, V_matrix[k][l] + loopE)
+                        print('internal', internal)
             
             # multiloop
             """
@@ -45,6 +47,11 @@ def create_V(seq):
             closed = V
             """
 
+            V_matrix[i][j] = min(hairpin, stacking, internal)
+
+    print(V_matrix)
+    return V_matrix
+
 def is_valid_pair(c0, c1):
     return (c0 == 'C' and c1 == 'G') or (c0 == 'G' and c1 == 'C') or (c0 == 'A' and c1 == 'U') or (c0 == 'U' and c1 == 'A') or (c0 == 'G' and c1 == 'U') or (c0 == 'U' and c1 == 'G')
 
@@ -52,6 +59,11 @@ def W(i, j):
     """assuming closed loop"""
     pass
 
-#if '__name__' == 'main':
-RNA = 'AUAUAUAU'
-print(create_V(RNA).shape)
+if __name__ == "__main__":
+    true_w = -1.8 # change
+    RNA = 'AUAUAUAU'
+    V = create_V(RNA)
+    assert true_w == V[0][0], 'Wrong W[0][0]'
+    print(V.shape)
+    # RNA = 'AUCGCAU'
+    # print(create_V(RNA).shape)
