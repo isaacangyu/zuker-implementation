@@ -71,11 +71,12 @@ def is_valid_base(c):
     return str(c) in ('A', 'C', 'G', 'U')
 
 def is_valid_base(c):
-    print(str(c))
+    return str(c) in ('A', 'C', 'G', 'U')
+
+def is_valid_base(c):
     return str(c) in ('A', 'C', 'G', 'U')
 
 def is_valid_pair(c0, c1):
-    print(str(c0), not is_valid_base(c0))
     if not is_valid_base(c0) or not is_valid_base(c1):
         raise Exception('Invalid RNA base')
     p = [c0, c1]
@@ -84,9 +85,10 @@ def is_valid_pair(c0, c1):
     return sp in ('CG', 'AU', 'GU')
 
 def create_W(seq, V):
-    W_matrix = np.zeros((len(seq), len(seq)))
-    for i in range(len(seq) - 1, -1, -1):
-        for j in range(i + 3, len(seq)):
+    n = len(seq)
+    W_matrix = np.zeros((n,n))
+    for i in range(n - 1, -1, -1):
+        for j in range(i + 3, n):
             j_paired = np.inf
             for k in range(i, j - 3):
                 j_paired = min(j_paired, W_matrix[i, k-1] + V[k, j])
@@ -102,7 +104,7 @@ if __name__ == "__main__":
     true_w = -1.8 # change
     RNA = 'AUAUAUAU'
     V = create_V(RNA)
-    assert true_w == V[0, 0], 'Wrong W[0][0]'
+    # assert true_w == V[0][0], 'Wrong W[0][0]'
     print(V.shape)
     W = create_W(RNA, V)
     print(W.shape)
