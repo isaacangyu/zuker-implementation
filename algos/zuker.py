@@ -3,10 +3,13 @@ from lookup import Lookup
 
 def create_V(seq):
     V_matrix = np.full((len(seq), len(seq)), np.inf)
-    WM_matrix = np.full(len(seq), len(seq), np.inf)
+    WM_matrix = np.full((len(seq), len(seq)), np.inf)
+    m = 3
+    n = len(seq)
     lookup = Lookup()
-    for i in range(len(seq) - 1, -1, -1):
-        for j in range(i + 3, len(seq)):
+    for i in range(n - 1, -1, -1):
+        for j in range(i + m, n):
+            print(seq[i], seq[j])
             if not is_valid_pair(seq[i], seq[j]):
                 continue
             
@@ -17,13 +20,12 @@ def create_V(seq):
 
             # hairpin
             size = j - i - 1
-            if size > 3:
-                hairpin = lookup.hairpin(size)
+            hairpin = lookup.hairpin(size)
             
             # stacking
             stacking = lookup.stack(seq[i], seq[i+1], seq[j], seq[j-1])
             
-            # internal + buldge loops
+            # internal + bulge loops
             for k in range(i+1, j):
                 for l in range(k+1, j):
                     if is_valid_pair(k, l):
@@ -53,9 +55,20 @@ def create_V(seq):
             closed = V_matrix[i][j] - 0.6
             WM_matrix = min(j_unpaired, i_unpaired, closed, non_closed)
 
+    return V_matrix
+
+def is_valid_base(c):
+    print(str(c))
+    return str(c) in ('A', 'C', 'G', 'U')
+
 def is_valid_pair(c0, c1):
-    p = "".join(sorted(c0 + c1))
-    return p in ('CG', 'AU', 'GU')
+    print(str(c0), not is_valid_base(c0))
+    if not is_valid_base(c0) or not is_valid_base(c1):
+        raise Exception('Invalid RNA base')
+    p = [c0, c1]
+    p.sort()
+    sp = "".join(p)
+    return sp in ('CG', 'AU', 'GU')
 
 def create_W(seq, V):
     W_matrix = np.zeros(len(seq), len(seq))
@@ -78,5 +91,8 @@ if __name__ == "__main__":
     V = create_V(RNA)
     assert true_w == V[0][0], 'Wrong W[0][0]'
     print(V.shape)
+    W = create_W(RNA, V)
+    print(W.shape)
+    print(zukers(RNA))
     # RNA = 'AUCGCAU'
     # print(create_V(RNA).shape)
