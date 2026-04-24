@@ -11,11 +11,11 @@ def calc_hairpin(i, j, lookup):
 def calc_stacking(i, j, seq, lookup):
     return lookup.stack(seq[i], seq[i+1], seq[j], seq[j-1])
 
-def calc_internal(i, j, V, lookup):
+def calc_internal(i, j, seq, V, lookup):
     internal = np.inf
     for k in range(i+1, j):
         for l in range(k+1, j):
-            if is_valid_pair(k, l):
+            if is_valid_pair(seq[k], seq[l]):
                 a = k - i - 1
                 b = j - l - 1
                 if a == 0 or b == 0:
@@ -46,7 +46,7 @@ def create_V(seq):
             stacking = calc_stacking(i, j, seq, lookup)
             
             # internal + buldge loops
-            internal = calc_internal(i, j, V_matrix, lookup)
+            internal = calc_internal(i, j, seq, V_matrix, lookup)
             
             # multiloop
             # non_closed used for the WM calculation after
