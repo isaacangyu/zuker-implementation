@@ -1,6 +1,7 @@
 import json
 import re
 import os
+import numpy as np
 
 class Lookup:
     @staticmethod
@@ -117,19 +118,19 @@ class Lookup:
         Returns:
             float: stacking free energy, 0.0 if not found
         """
-        return self.stack_energy.get(base_i, {}).get(base_ip1, {}).get(base_j, {}).get(base_jm1, 0.0)
+        return self.stack_energy.get(base_i, {}).get(base_ip1, {}).get(base_j, {}).get(base_jm1, np.inf)
 
     def hairpin(self, size):
         """Get the hairpin loop energy for the given size."""
-        return self.hairpin_energy.get(str(size), 0.0)
+        return self.hairpin_energy.get(str(size), np.inf)
 
     def bulge(self, size):
         """Get the bulge loop energy for the given size."""
-        return self.bulge_energy.get(str(size), 0.0)
+        return self.bulge_energy.get(str(size), np.inf)
 
     def internal(self, size):
         """Get the internal loop energy for the given size."""
-        return self.internal_energy.get(str(size), 0.0)
+        return self.internal_energy.get(str(size), np.inf)
 
     def multiloop(self, p, u):
         """Get the multiloop energy for p inner pairs and u unpaired bases.
@@ -144,6 +145,7 @@ class Lookup:
 if __name__ == '__main__':
     lookup_instance = Lookup()
     print('stack(A,U,U,G)=', lookup_instance.stack('A', 'U', 'U', 'G'))
+    print('stack(C,U,U,G)=', lookup_instance.stack('C', 'U', 'U', 'G'))
     print('hairpin(3)=', lookup_instance.hairpin(3))
     print('bulge(3)=', lookup_instance.bulge(3))
     print('internal(4)=', lookup_instance.internal(4))

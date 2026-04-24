@@ -28,9 +28,12 @@ def calc_internal(i, j, V, lookup):
 def create_V(seq):
     V_matrix = np.full((len(seq), len(seq)), np.inf)
     WM_matrix = np.full((len(seq), len(seq)), np.inf)
+    m = 3
+    n = len(seq)
     lookup = Lookup()
-    for i in range(len(seq) - 1, -1, -1):
-        for j in range(i + 3, len(seq)):
+    for i in range(n - 1, -1, -1):
+        for j in range(i + m, n):
+            print(seq[i], seq[j])
             if not is_valid_pair(seq[i], seq[j]):
                 continue   
             internal = np.inf
@@ -63,8 +66,22 @@ def create_V(seq):
             WM_matrix[i, j] = min(j_unpaired, i_unpaired, closed, non_closed)
     return V_matrix
 
+def is_valid_base(c):
+    print(str(c))
+    return str(c) in ('A', 'C', 'G', 'U')
+
+def is_valid_base(c):
+    print(str(c))
+    return str(c) in ('A', 'C', 'G', 'U')
+
 def is_valid_pair(c0, c1):
-    return (c0 == 'C' and c1 == 'G') or (c0 == 'G' and c1 == 'C') or (c0 == 'A' and c1 == 'U') or (c0 == 'U' and c1 == 'A') or (c0 == 'G' and c1 == 'U') or (c0 == 'U' and c1 == 'G')
+    print(str(c0), not is_valid_base(c0))
+    if not is_valid_base(c0) or not is_valid_base(c1):
+        raise Exception('Invalid RNA base')
+    p = [c0, c1]
+    p.sort()
+    sp = "".join(p)
+    return sp in ('CG', 'AU', 'GU')
 
 def create_W(seq, V):
     W_matrix = np.zeros((len(seq), len(seq)))
@@ -87,5 +104,8 @@ if __name__ == "__main__":
     V = create_V(RNA)
     assert true_w == V[0, 0], 'Wrong W[0][0]'
     print(V.shape)
+    W = create_W(RNA, V)
+    print(W.shape)
+    print(zukers(RNA))
     # RNA = 'AUCGCAU'
     # print(create_V(RNA).shape)
