@@ -12,6 +12,7 @@ class Zuker:
         self.WM = None
         self.W_pointers = None
         self.mfe = None
+        self.bp_idxs = None
 
         self.create_V()
         self.create_W()
@@ -37,12 +38,12 @@ class Zuker:
                         loopE = self.lookup.bulge(a + b)
                     else:
                         loopE = self.lookup.internal(a + b)
-                    internal = min(internal, V[k][l] + loopE)
+                    internal = min(internal, self.V[k][l] + loopE)
         return internal
 
     def create_V(self):
-        V = np.full((self.n, self.n), np.inf)
-        WM = np.full((self.n, self.n), np.inf)
+        self.V = np.full((self.n, self.n), np.inf)
+        self.WM = np.full((self.n, self.n), np.inf)
         m = 3
         for i in range(self.n - 1, -1, -1):
             for j in range(i + m, self.n):
@@ -52,24 +53,23 @@ class Zuker:
                 # non_closed used for the WM calculation after
                 non_closed = np.inf
                 for k in range(i + 1, j):
-                    multiloop = min(multiloop, WM[i+1, k] + WM[k+1, j-1] + 9.3)
-                    non_closed = min(non_closed, WM[i, k] + WM[k+1, j]) 
+                    multiloop = min(multiloop, self.WM[i+1, k] + self.WM[k+1, j-1] + 9.3)
+                    non_closed = min(non_closed, self.WM[i, k] + self.WM[k+1, j]) 
                 # hairpin
                 hairpin = self.calc_hairpin(i, j)
                 # stacking
                 stacking = self.calc_stacking(i, j)
                 # internal + buldge loops
-                internal = self.calc_internal(i, j, V)
+                internal = self.calc_internal(i, j, self.V)
                 # multiloop
                 # assign V at (i, j)
-                V[i, j] = min(hairpin, stacking, internal, multiloop)
+                self.V[i, j] = min(hairpin, stacking, internal, multiloop)
                 # calculate WM
-                j_unpaired = WM[i, j-1]
-                i_unpaired = WM[i+1, j]
-                closed = V[i, j] - 0.6
+                j_unpaired = self.WM[i, j-1]
+                i_unpaired = self.WM[i+1, j]
+                closed = self.V[i, j] - 0.6
                 # assign WM at (i, j)
-                WM[i, j] = min(j_unpaired, i_unpaired, closed, non_closed)
-        self.V = V
+                self.WM[i, j] = min(j_unpaired, i_unpaired, closed, non_closed)
 
     def is_valid_base(self, c):
         return str(c) in ('A', 'C', 'G', 'U')
@@ -83,21 +83,44 @@ class Zuker:
         return sp in ('CG', 'AU', 'GU')
 
     def create_W(self):
-        W = np.zeros((self.n, self.n))
+        self.W = np.zeros((self.n, self.n))
         for i in range(self.n - 1, -1, -1):
             for j in range(i + 3, self.n):
                 j_paired = np.inf
                 for k in range(i, j - 3):
-                    j_paired = min(j_paired, W[i, k-1] + self.V[k, j])
-                W[i, j] = min(W[i, j-1], j_paired)
-        self.W = W
+                    j_paired = min(j_paired, self.W[i, k-1] + self.V[k, j])
+                self.W[i, j] = min(self.W[i, j-1], j_paired)
         self.mfe = self.W[0, self.n - 1]
 
-    def W_backtrace(self):
-        node = self.W_pointers
-        # store (j, 'v/w')
-        while node[0] > 1:
-            pass
+    def backtrace(self):
+        j = self.n - 1
+        node = self.W_pointers[j]
+        bp_idxs = []
+        
+        while j > 1:
+            k = node[1]
+            
+            self.bp_idxs.append self.V_backtrace(k, j)
+            j = k
+        
+        self.dot = self.write_dot(bp_idxs)
+        return self.dot
+
+    def V_backtrace(self, k, j):
+        self.V_pointers
+        bp_id
+
+    def write_dot(self, bp_idxs):
+        nbp = len(bp_idxs)
+        assert nbp % 2 == 0, "Number of base pairs is not even"
+        dot = ['.' for _ in range(self.n)]
+
+        for i in range(nbp / 2):
+            dot[i] = '('
+        for i in range(nbp / 2, nbp):
+            dot[i] = ')'
+        
+        return dot
 
 if __name__ == "__main__":
     RNA = 'AUAUAUAU'
@@ -105,3 +128,4 @@ if __name__ == "__main__":
     print('V shape:', z.V.shape)
     print('W shape:', z.W.shape)
     print('MFE:', z.mfe)
+    print('Dot:', z.backtrace())
