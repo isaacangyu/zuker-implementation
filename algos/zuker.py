@@ -92,7 +92,7 @@ class Zuker:
                     hairpin = self.calc_hairpin(i, j)
 
                     # stacking
-                    stacking = self.calc_stacking(i, j)
+                    stacking = self.calc_stacking(i, j) + V[i+1, j-1]
 
                     # internal + buldge loops
                     internal, k_best_int, l_best_int = self.calc_internal(i, j, V)
@@ -186,8 +186,7 @@ class Zuker:
         for l in range(1, self.n):
             for i in range(self.n - l):
                 j = l + i
-
-                if j - i <= self.m:                  # set to inf if (i, j) are to close
+                if j - i <= self.m:                  # set to 0 if (i, j) are to close
                     W[i, j] = 0
                     continue
                 
@@ -205,7 +204,7 @@ class Zuker:
                 
                 if W[i, j-1] <= j_paired:
                     W[i, j] = W[i, j-1]
-                    W_pointers[i, j] = ("U", j)
+                    W_pointers[i, j] = ("U", j-1)
                 else:
                     W[i, j] = j_paired
                     W_pointers[i, j] = ("P", k_best)
@@ -213,6 +212,8 @@ class Zuker:
         self.W = W
         self.mfe = self.W[0, self.n - 1]
         self.W_pointers = W_pointers
+
+"""
 
     def backtrace(self):
         j = self.n - 1
@@ -244,9 +245,10 @@ class Zuker:
         
         return dot
     
+"""
 
 if __name__ == "__main__":
-    RNA = 'AUAUAUAU'
+    RNA = 'AUAUAUAUAU'
     z = Zuker(RNA)
     print('V shape:', z.V.shape)
     print('W shape:', z.W.shape)
@@ -255,4 +257,8 @@ if __name__ == "__main__":
     print(z.V)
     print("W:")
     print(z.W)
-    print('Dot:', z.backtrace())
+    print("V pointers:")
+    print(z.V_pointers)
+    print("W pointers:")
+    print(z.W_pointers)
+    # print('Dot:', z.backtrace())
