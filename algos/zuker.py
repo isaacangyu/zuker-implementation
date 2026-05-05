@@ -234,6 +234,7 @@ class Zuker:
                 bp_idxs += self.WM_backtrace(loop[1], j)
                 break
 
+        print('WM base pairs', bp_idxs)
         return bp_idxs
 
     def V_backtrace(self, i, j):
@@ -257,6 +258,7 @@ class Zuker:
                 bp_idxs += self.WM_backtrace(loop[1], j)
                 break
 
+        print('V base pairs', bp_idxs)
         return bp_idxs
 
     def backtrace(self):
@@ -270,6 +272,8 @@ class Zuker:
                 bp_idxs += self.V_backtrace(k, j)
             j = k
         
+        print('W base pairs', bp_idxs)
+        
         self.dot = self.write_dot(bp_idxs)
         return self.dot
 
@@ -277,11 +281,10 @@ class Zuker:
         nbp = len(bp_idxs)
         assert nbp % 2 == 0, "Number of base pairs is not even"
         dot = ['.' for _ in range(self.n)]
-
-        for i in range(nbp / 2):
-            dot[i] = '('
-        for i in range(nbp / 2, nbp):
-            dot[i] = ')'
+        
+        for bp1, bp2 in bp_idxs:
+            dot[bp1] = '('
+            dot[bp2] = ')'
         
         return dot
     
@@ -299,4 +302,4 @@ if __name__ == "__main__":
     print(z.W_pointers)
     print(z.V_pointers)
     print(z.WM_pointers)
-    # print('Dot:', z.backtrace())
+    print('Dot:', z.backtrace())
