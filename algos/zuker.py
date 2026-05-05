@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+np.set_printoptions(threshold=sys.maxsize)
 from lookup import Lookup
 
 class Zuker:
@@ -239,17 +241,15 @@ class Zuker:
     def V_backtrace(self, i, j):
         loop = self.V_pointers[i, j]
         bp_idxs = []
-
+        print(j-i)
         while j - i > self.m:
+            bp_idxs.append((i,j))
             if loop[0] == 'H':
-                bp_idxs.append((i,j))
                 break
             if loop[0] == 'S':
-                bp_idxs.append((i+1,j-1))
                 i += 1
                 j -= 1
             if loop[0] == 'I':
-                bp_idxs.append((loop[1], loop[2]))
                 i = loop[1]
                 j = loop[2]
             if loop[0] == 'M':
@@ -262,15 +262,16 @@ class Zuker:
 
     def backtrace(self):
         j = self.n - 1
-        node = self.W_pointers[j]
+        node = self.W_pointers[0, j]
         bp_idxs = []
         
-        while node.any() and j > 1:
+        while node[0] and j > 1:
             paired, k = node[0], node[1]
+            print(paired, k, j)
             if paired == 'P':
                 bp_idxs += self.V_backtrace(k, j)
             j = k
-        
+
         print('W base pairs', bp_idxs)
         
         self.dot = self.write_dot(bp_idxs)
@@ -285,7 +286,7 @@ class Zuker:
             dot[bp1] = '('
             dot[bp2] = ')'
         
-        return dot
+        return ''.join(dot)
 
 if __name__ == "__main__":
     RNA = 'AUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAU'
@@ -304,3 +305,4 @@ if __name__ == "__main__":
     print("WM pointers:")
     print(z.WM_pointers)
     print('Dot:', z.backtrace())
+    print('w00', z.W_pointers[0][z.n-1])
