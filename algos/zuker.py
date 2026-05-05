@@ -15,7 +15,8 @@ class Zuker:
         self.V_pointers = None
         self.WM_pointers = None
 
-        self.m = min_loop           # must be at least 3
+        assert min_loop >= 3, "Min loop size must be at least 3"
+        self.m = min_loop
         self.a = offset
         self.b = helix
         self.c = unpaired_nuc
@@ -213,7 +214,49 @@ class Zuker:
         self.mfe = self.W[0, self.n - 1]
         self.W_pointers = W_pointers
 
-"""
+    def WM_backtrace(self, i, j):
+        loop = self.V_pointers[i, j]
+        bp_idxs = []
+
+        while j - i > self.m:
+            if loop[0] == 'Ui':
+                bp_idxs.append((i+1,j))
+                i += 1
+            if loop[0] == 'Uj':
+                bp_idxs.append((i,j-1))
+                j -= 1
+            if loop[0] == 'C':
+                bp_idxs += self.V_backtrace(i, j)
+                break
+            if loop[0] == 'S':
+                bp_idxs += self.WM_backtrace(i, loop[1])
+                bp_idxs += self.WM_backtrace(loop[1], j)
+                break
+
+        return bp_idxs
+
+    def V_backtrace(self, i, j):
+        loop = self.V_pointers[i, j]
+        bp_idxs = []
+
+        while j - i > self.m:
+            if loop[0] == 'H':
+                bp_idxs.append((i,j))
+                break
+            if loop[0] == 'S':
+                bp_idxs.append((i+1,j-1))
+                i += 1
+                j -= 1
+            if loop[0] == 'I':
+                bp_idxs.append((loop[1], loop[2]))
+                i = loop[1]
+                j = loop[2]
+            if loop[0] == 'M':
+                bp_idxs += self.WM_backtrace(i, loop[1])
+                bp_idxs += self.WM_backtrace(loop[1], j)
+                break
+
+        return bp_idxs
 
     def backtrace(self):
         j = self.n - 1
@@ -221,17 +264,13 @@ class Zuker:
         bp_idxs = []
         
         while j > 1:
-            k = node[1]
-            
-            self.bp_idxs.append self.V_backtrace(k, j)
+            paired, k = node[0], node[1]
+            if paired == 'P':
+                bp_idxs += self.V_backtrace(k, j)
             j = k
         
         self.dot = self.write_dot(bp_idxs)
         return self.dot
-
-    def V_backtrace(self, k, j):
-        self.V_pointers
-        bp_id
 
     def write_dot(self, bp_idxs):
         nbp = len(bp_idxs)
@@ -244,10 +283,9 @@ class Zuker:
             dot[i] = ')'
         
         return dot
-    
-"""
 
 if __name__ == "__main__":
+    RNA = 'AUAUAUAUAU'
     RNA = 'AUAUAUAUAU'
     z = Zuker(RNA)
     print('V shape:', z.V.shape)
@@ -257,6 +295,10 @@ if __name__ == "__main__":
     print(z.V)
     print("W:")
     print(z.W)
+    print(z.W_pointers)
+    print(z.V_pointers)
+    print(z.WM_pointers)
+    # print('Dot:', z.backtrace())
     print("V pointers:")
     print(z.V_pointers)
     print("W pointers:")
