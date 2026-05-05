@@ -288,7 +288,7 @@ class Zuker:
         return dot
 
 if __name__ == "__main__":
-    RNA = 'AUAUAUAUAUAUAUAUAUAU'
+    RNA = 'AUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAUAU'
     z = Zuker(RNA)
     print('V shape:', z.V.shape)
     print('W shape:', z.W.shape)
