@@ -265,7 +265,7 @@ class Zuker:
         node = self.W_pointers[j]
         bp_idxs = []
         
-        while j > 1:
+        while node.any() and j > 1:
             paired, k = node[0], node[1]
             if paired == 'P':
                 bp_idxs += self.V_backtrace(k, j)
@@ -288,8 +288,7 @@ class Zuker:
         return dot
 
 if __name__ == "__main__":
-    RNA = 'AUAUAUAUAU'
-    RNA = 'AUAUAUAUAU'
+    RNA = 'AUAUAUAUAUAUAUAUAUAU'
     z = Zuker(RNA)
     print('V shape:', z.V.shape)
     print('W shape:', z.W.shape)
@@ -298,12 +297,10 @@ if __name__ == "__main__":
     print(z.V)
     print("W:")
     print(z.W)
-    print(z.W_pointers)
-    print(z.V_pointers)
-    print(z.WM_pointers)
-    # print('Dot:', z.backtrace())
     print("V pointers:")
     print(z.V_pointers)
     print("W pointers:")
     print(z.W_pointers)
-    # print('Dot:', z.backtrace())
+    print("WM pointers:")
+    print(z.WM_pointers)
+    print('Dot:', z.backtrace())
