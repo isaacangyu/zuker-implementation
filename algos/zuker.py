@@ -43,20 +43,19 @@ class Zuker:
 
     def calc_internal(self, i, j, V):
         internal = np.inf
-        MAX = 30                                # restrict loop size to 30 to keep runtime O(n^3)
         k_best = None
         l_best = None
-        for k in range(i+1, j):
-            for l in range(k+1, j):
+        MAX_LOOP = 30
+        for k in range(i+1, min(j, i + MAX_LOOP + 1)):
+            max_b = MAX_LOOP - (k - i - 1)
+            l_min = max(k+1, j - max_b - 1)
+            for l in range(l_min, j):  # restrict loop size to 30 to keep runtime O(n^3)
                 if self.is_valid_pair(self.seq[k], self.seq[l]) and l - k > self.m:
                     if k == i+1 and l == j-1:   # skip stacking pair case
                         continue
 
                     a = k - i - 1
                     b = j - l - 1
-                    
-                    if a + b > MAX:
-                        continue
 
                     if a == 0 or b == 0:
                         loopE = self.lookup.bulge(a + b)
@@ -207,7 +206,7 @@ class Zuker:
                 
                 if W[i, j-1] <= j_paired:
                     W[i, j] = W[i, j-1]
-                    W_pointers[i, j] = ("U", j-1)
+                    W_pointers[i, j] = ("U", j)
                 else:
                     W[i, j] = j_paired
                     W_pointers[i, j] = ("P", k_best)
@@ -217,47 +216,52 @@ class Zuker:
         self.W_pointers = W_pointers
 
     def WM_backtrace(self, i, j):
-        loop = self.V_pointers[i, j]
+        # loop = self.V_pointers[i, j]
         bp_idxs = []
 
         while j - i > self.m:
+            # added elif since they should be seperate cases
+            loop = self.WM_pointers[i, j]        # update here + change to WM pointers
             if loop[0] == 'Ui':
-                bp_idxs.append((i+1,j))
+                # no bps
+                # bp_idxs.append((i+1,j))
                 i += 1
-            if loop[0] == 'Uj':
-                bp_idxs.append((i,j-1))
+            elif loop[0] == 'Uj':               # change to elif
+                # no bps
+                # bp_idxs.append((i,j-1))
                 j -= 1
-            if loop[0] == 'C':
+            elif loop[0] == 'C':
                 bp_idxs += self.V_backtrace(i, j)
                 break
-            if loop[0] == 'S':
+            elif loop[0] == 'S':
                 bp_idxs += self.WM_backtrace(i, loop[1])
-                bp_idxs += self.WM_backtrace(loop[1], j)
+                bp_idxs += self.WM_backtrace(loop[1] + 1, j)    # should be k+1
                 break
 
-        print('WM base pairs', bp_idxs)
+        # print('WM base pairs', bp_idxs)
         return bp_idxs
 
     def V_backtrace(self, i, j):
-        loop = self.V_pointers[i, j]
+        # loop = self.V_pointers[i, j]
         bp_idxs = []
-        print(j-i)
+        # print(j-i)
         while j - i > self.m:
+            loop = self.V_pointers[i, j]    # update here
             bp_idxs.append((i,j))
             if loop[0] == 'H':
                 break
-            if loop[0] == 'S':
+            elif loop[0] == 'S':
                 i += 1
                 j -= 1
-            if loop[0] == 'I':
+            elif loop[0] == 'I':
                 i = loop[1]
                 j = loop[2]
-            if loop[0] == 'M':
-                bp_idxs += self.WM_backtrace(i, loop[1])
-                bp_idxs += self.WM_backtrace(loop[1], j)
+            elif loop[0] == 'M':
+                bp_idxs += self.WM_backtrace(i + 1, loop[1])            # updating WM bounds
+                bp_idxs += self.WM_backtrace(loop[1] + 1, j - 1)
                 break
 
-        print('V base pairs', bp_idxs)
+        # print('V base pairs', bp_idxs)
         return bp_idxs
 
     def backtrace(self):
@@ -267,22 +271,18 @@ class Zuker:
         
         while node and j > 1:
             paired, k = node[0], node[1]
-            print(paired, k, j)
+            # print(paired, k, j)
             if paired == 'P':
                 bp_idxs += self.V_backtrace(k, j)
-            # if j == 17: 
-            #     break
-            j = k
+            j = k - 1
             node = self.W_pointers[0, j]
 
-        print('W base pairs', bp_idxs)
+        # print('W base pairs', bp_idxs)
         
         self.dot = self.write_dot(bp_idxs)
         return self.dot
 
     def write_dot(self, bp_idxs):
-        nbp = len(bp_idxs)
-        assert nbp % 2 == 0, "Number of base pairs is not even"
         dot = ['.' for _ in range(self.n)]
         
         for bp1, bp2 in bp_idxs:
@@ -294,20 +294,28 @@ class Zuker:
 if __name__ == "__main__":
     RNA_trivial = 'AU' * 20
     RNA_hw = 'AUGCGGGGAUCGUCGAGAU'
-    z = Zuker(RNA_hw)
-    print('Length', z.n)
-    print('V shape:', z.V.shape)
-    print('W shape:', z.W.shape)
+    RNA_hair = 'GGGAAAUCC'
+    RNA_multi = 'GGGAAACCCAAAGGGUUUCCCAAAGGGAAACCC'
+    RNA_hard = 'UUUAUUGGGCCUAAAGCGUCCGUAGCCGGGCUGGUAAGUCCUCCGGGAAAUCUGGCGGCUUAACCGUCAGACUGCCGGAGGAUACUGCCAGCCUAGGGACCGGGAGAGGCCGGGGGUAUUCCCGGAGUAGGGGUGAAAUCCUGUAAUCCCGGGAGGACCACCUGUGGCGAAGGCGCCCGGCUGGAACGGGUCCGACGGUGAGGGACGAAGGCCAGGGGAGCGAACCGGAUUAGAUACCCGGGUAGUCCUGGCUGUAAACGAUGCGGACUAGGUGUCACCGAAGCUACGAGCUUCGGUGGUGCCGGAGGGAAGCCGUUAAGUCCGCCGCCUGGGGAGUACGGCCGCAAGGCUGAAACUUA'           # 16S_rRNA-A.fulgidus_domain2
+    canon_structure = '.......(((((...(.((((.(.(((.(((((((.((((((((((.....(((((((.....)))))))....))))))))..)))))))))...((((((.....(((((((((..(((((((....(((......))).......)))))))..)).......((....)).)))))))....))).)))...))))..))))....((((((...((...((((.........))))...))))))))..........((((((..((((((((((((((.....))))))))))))))...((..)))).....)))))))))).(((......((((....))))....))).'
+    RNA_tRNA_Phe = 'GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA'
+    canon_structure = '(((((((..((((........)))).(((((.......))))).....(((((.......))))))))))))....'
+    z = Zuker('GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA')
+    # print('Length', z.n)
+    # print('V shape:', z.V.shape)
+    # print('W shape:', z.W.shape)
     print('MFE:', z.mfe)
-    print('V:')
-    print(z.V)
-    print("W:")
-    print(z.W)
-    print("W pointers:")
-    print(z.W_pointers)
+    print('WM:')
+    print(z.WM)
+    # print('V:')
+    # print(z.V)
+    # print("W:")
+    # print(z.W)
+    # print("W pointers:")
+    # print(z.W_pointers)
     print("V pointers:")
     print(z.V_pointers)
-    print("WM pointers:")
-    print(z.WM_pointers)
+    # print("WM pointers:")
+    # print(z.WM_pointers)
     print('Dot:', z.backtrace())
-    print('w00', z.W_pointers[0][z.n-1])
+    # print('w00', z.W_pointers[0][z.n-1])
