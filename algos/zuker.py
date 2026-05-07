@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 np.set_printoptions(threshold=sys.maxsize)
-from lookup import Lookup
+from ..lookup.lookup import Lookup
 
 class Zuker:
     def __init__(self, seq, min_loop=3, offset=9.3, helix=-0.6, unpaired_nuc=0):
