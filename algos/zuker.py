@@ -17,6 +17,8 @@ class Zuker:
         self.V_pointers = None
         self.WM_pointers = None
 
+        self.pairs = None
+
         assert min_loop >= 3, "Min loop size must be at least 3"
         self.m = min_loop
         self.a = offset
@@ -27,6 +29,7 @@ class Zuker:
 
         self.create_V()
         self.create_W()
+        self.backtrace()
 
     def calc_hairpin(self, i, j):
         hairpin = np.inf
@@ -49,13 +52,16 @@ class Zuker:
         for k in range(i+1, min(j, i + MAX_LOOP + 1)):
             max_b = MAX_LOOP - (k - i - 1)
             l_min = max(k+1, j - max_b - 1)
-            for l in range(l_min, j):  # restrict loop size to 30 to keep runtime O(n^3)
+            for l in range(l_min, j):           # restrict loop size to 30 to keep runtime O(n^3)
                 if self.is_valid_pair(self.seq[k], self.seq[l]) and l - k > self.m:
                     if k == i+1 and l == j-1:   # skip stacking pair case
                         continue
 
                     a = k - i - 1
                     b = j - l - 1
+
+                    if a + b > 30:
+                        print(f'bad size {a + b}')
 
                     if a == 0 or b == 0:
                         loopE = self.lookup.bulge(a + b)
@@ -278,7 +284,7 @@ class Zuker:
             node = self.W_pointers[0, j]
 
         # print('W base pairs', bp_idxs)
-        
+        self.pairs = bp_idxs
         self.dot = self.write_dot(bp_idxs)
         return self.dot
 
@@ -300,21 +306,21 @@ if __name__ == "__main__":
     canon_structure = '.......(((((...(.((((.(.(((.(((((((.((((((((((.....(((((((.....)))))))....))))))))..)))))))))...((((((.....(((((((((..(((((((....(((......))).......)))))))..)).......((....)).)))))))....))).)))...))))..))))....((((((...((...((((.........))))...))))))))..........((((((..((((((((((((((.....))))))))))))))...((..)))).....)))))))))).(((......((((....))))....))).'
     RNA_tRNA_Phe = 'GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA'
     canon_structure = '(((((((..((((........)))).(((((.......))))).....(((((.......))))))))))))....'
-    z = Zuker('GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA')
+    z = Zuker(RNA_multi)
     # print('Length', z.n)
     # print('V shape:', z.V.shape)
     # print('W shape:', z.W.shape)
     print('MFE:', z.mfe)
-    print('WM:')
-    print(z.WM)
+    # print('WM:')
+    # print(z.WM)
     # print('V:')
     # print(z.V)
     # print("W:")
     # print(z.W)
     # print("W pointers:")
     # print(z.W_pointers)
-    print("V pointers:")
-    print(z.V_pointers)
+    # print("V pointers:")
+    # print(z.V_pointers)
     # print("WM pointers:")
     # print(z.WM_pointers)
     print('Dot:', z.backtrace())
