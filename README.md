@@ -15,12 +15,12 @@ The optimal RNA secondary structure is computed using a 3D dynamic programming a
 ### General Recurrence (W Matrix)
 Let $ W_{i,j} $ represent the MFE of the substring $ S[i..j] $.
 
-\[
-W_{i,j} = \begin{cases}
-W_{i,j-1} & \text{$ S[j] $ unpaired} \\
+$$
+W_{i,j} = \min \begin{cases}
+W_{i,j-1} & \text{S[j] unpaired} \\
 \min_{i \leq k < j - m} W_{i,k-1} + V_{k,j} & \text{otherwise}
 \end{cases}
-\]
+$$
 
 The final MFE is $ W_{1,n} $.
 
