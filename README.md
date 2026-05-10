@@ -1,8 +1,10 @@
+
+
 # Zuker Algorithm Implementation for RNA Secondary Structure Prediction
 
 ## Motivation
 
-**Formulation:** Given an RNA sequence $ S \in \{A, U, G, C\}^* $, find the non-crossing secondary structure $ P $ with Minimal Free Energy (MFE).
+**Formulation:** Given an RNA sequence \(S \in \{A, U, G, C\}^*\), find the non-crossing secondary structure $ P $ with Minimal Free Energy (MFE).
 
 ### Advantages over Nussinov Algorithm
 - Minimizes free energy instead of maximizing the number of base pairs.
