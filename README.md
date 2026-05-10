@@ -1,10 +1,8 @@
-
-
 # Zuker Algorithm Implementation for RNA Secondary Structure Prediction
 
 ## Motivation
 
-**Formulation:** Given an RNA sequence $ S \in \{A, U, G, C\}^* $, find the non-crossing secondary structure $ P $ with Minimal Free Energy (MFE).
+**Formulation:** Given an RNA sequence \( S \in \{A, U, G, C\}^* \), find the non-crossing secondary structure $ P $ with Minimal Free Energy (MFE).
 
 ### Advantages over Nussinov Algorithm
 - Minimizes free energy instead of maximizing the number of base pairs.
@@ -17,12 +15,12 @@ The optimal RNA secondary structure is computed using a 3D dynamic programming a
 ### General Recurrence (W Matrix)
 Let $ W_{i,j} $ represent the MFE of the substring $ S[i..j] $.
 
-$$
-W_{i,j} = \min \begin{cases}
+\[
+W_{i,j} = \begin{cases}
 W_{i,j-1} & \text{$ S[j] $ unpaired} \\
 \min_{i \leq k < j - m} W_{i,k-1} + V_{k,j} & \text{otherwise}
 \end{cases}
-$$
+\]
 
 The final MFE is $ W_{1,n} $.
 
@@ -40,7 +38,7 @@ $$
 
 - **Hairpin:** Energy for a hairpin loop of size $ j - i - 1 $.
 - **Stacking:** Energy for stacking pair plus the MFE of the enclosed region.
-- **Internal/Bulge:** Minimum energy over possible internal loops. A bulge loop is a special case of an internal loop where $i'=i+1$ or $'j'=j-1$. 
+- **Internal/Bulge:** Minimum energy over possible internal loops. A bulge loop is a special case of an internal loop where $i'=i+1$ or $j'=j-1$. 
 - **Multiloop:** Initialize a split for multiloop
 
 ### Multi-loop Recurrence (WM Matrix)
