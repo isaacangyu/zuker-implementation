@@ -69,37 +69,33 @@ Where $ a, b, c $ are multiloop parameters (offset, helix penalty, unpaired nucl
 
 ## Validation
 
-Validation is performed in two stages:
-
-1. **Basic Tests:** Use short sample sequences to verify that stacking and backtracing work correctly. For these, stacking should be preferred over loops.
-
-2. **Extended Tests:** Test with longer sequences and model tRNA structures.
-
 ### Dataset: ArchiveII
 - Source: [Hugging Face ArchiveII Dataset](https://huggingface.co/datasets/multimolecule/archiveii)
 - Provides RNA sequences and corresponding dot-bracket notations for comparison.
 
-### Running Validation
+Validation was performed with the following steps:
 
-Use `validation.py` to run validation tests. The script accepts the following inputs:
+1. Call the Zuker algorithm on all sequences in the dataset and retrieve a list of the predicted base pairs (a list of tuples representing the indices that paired).
 
-- `--input sample`: Run basic tests with short sample sequences.
-- `--input long`: Test with longer sequences.
-- `--input trna`: Validate against tRNA structures.
-- `--input archiveii`: Validate using the ArchiveII dataset.
-- `--input test_string --sequence <seq> --canonical <dot_bracket>`: Test a custom RNA sequence with its canonical dot-bracket structure (canonical is required for this option).
+2. Represent the base pairs in the actual solution as a list of the predicted base pairs.
 
-Statistics computed:
+3. Compare the two lists and compute the following metrics:
 - **F1 Score:** Harmonic mean of precision and recall.
 - **Precision:** Fraction of predicted base pairs that are correct.
 - **Recall:** Fraction of true base pairs that are predicted.
-- **Tuple List:** A list of tuples indicating positions; +1 for missing or mismatched base pairs.
 
-Example usage:
-```bash
-python validation/validation.py --input "sample"
-python validation/validation.py --input "AUGC" --canonical "(..)"
-```
+## Results
+We created histograms representing the metrics:
+!(zuker-implementation/validation/hist_scores.png)
+
+Precision mean: ___
+Precision median: ___
+
+Recall mean: ___
+Recall median: ___
+
+F1 Score mean: ___
+F1 Score median: ___
 
 ## Future Steps
 
@@ -110,5 +106,6 @@ python validation/validation.py --input "AUGC" --canonical "(..)"
 
 ## Citations
 
+- Lookup table data files: [RNAstructure] (https://rna.urmc.rochester.edu/Overview/index.html)
 - Algorithm: [Zuker Algorithm Slides](https://math.mit.edu/classes/18.417/Slides/rna-prediction-zuker.pdf)
 - Dataset: [ArchiveII on Hugging Face](https://huggingface.co/datasets/multimolecule/archiveii)
