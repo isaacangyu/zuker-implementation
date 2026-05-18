@@ -1,16 +1,17 @@
 import numpy as np
-import sys
-np.set_printoptions(threshold=sys.maxsize)
-from ..lookup.lookup import Lookup
+from lookup.lookup import Lookup
+import time
 
 class Zuker:
     def __init__(self, seq, min_loop=3, offset=9.3, helix=-0.6, unpaired_nuc=0):
+        start = time.perf_counter()
+
         self.seq = seq
         self.n = len(seq)
         self.lookup = Lookup()
 
-        self.V = None
         self.W = None
+        self.V = None
         self.WM = None
         
         self.W_pointers = None
@@ -26,10 +27,13 @@ class Zuker:
         self.c = unpaired_nuc
 
         self.mfe = None
+        self.dot = None
 
         self.create_V()
         self.create_W()
         self.backtrace()
+
+        self.runtime = time.perf_counter() - start
 
     def calc_hairpin(self, i, j):
         hairpin = np.inf
@@ -222,37 +226,29 @@ class Zuker:
         self.W_pointers = W_pointers
 
     def WM_backtrace(self, i, j):
-        # loop = self.V_pointers[i, j]
         bp_idxs = []
 
         while j - i > self.m:
-            # added elif since they should be seperate cases
-            loop = self.WM_pointers[i, j]        # update here + change to WM pointers
+            loop = self.WM_pointers[i, j]        
             if loop[0] == 'Ui':
-                # no bps
-                # bp_idxs.append((i+1,j))
+                
                 i += 1
-            elif loop[0] == 'Uj':               # change to elif
-                # no bps
-                # bp_idxs.append((i,j-1))
+            elif loop[0] == 'Uj':               
                 j -= 1
             elif loop[0] == 'C':
                 bp_idxs += self.V_backtrace(i, j)
                 break
             elif loop[0] == 'S':
                 bp_idxs += self.WM_backtrace(i, loop[1])
-                bp_idxs += self.WM_backtrace(loop[1] + 1, j)    # should be k+1
+                bp_idxs += self.WM_backtrace(loop[1] + 1, j)
                 break
 
-        # print('WM base pairs', bp_idxs)
         return bp_idxs
 
     def V_backtrace(self, i, j):
-        # loop = self.V_pointers[i, j]
         bp_idxs = []
-        # print(j-i)
         while j - i > self.m:
-            loop = self.V_pointers[i, j]    # update here
+            loop = self.V_pointers[i, j]
             bp_idxs.append((i,j))
             if loop[0] == 'H':
                 break
@@ -263,11 +259,10 @@ class Zuker:
                 i = loop[1]
                 j = loop[2]
             elif loop[0] == 'M':
-                bp_idxs += self.WM_backtrace(i + 1, loop[1])            # updating WM bounds
+                bp_idxs += self.WM_backtrace(i + 1, loop[1])
                 bp_idxs += self.WM_backtrace(loop[1] + 1, j - 1)
                 break
 
-        # print('V base pairs', bp_idxs)
         return bp_idxs
 
     def backtrace(self):
@@ -277,13 +272,11 @@ class Zuker:
         
         while node and j > 1:
             paired, k = node[0], node[1]
-            # print(paired, k, j)
             if paired == 'P':
                 bp_idxs += self.V_backtrace(k, j)
             j = k - 1
             node = self.W_pointers[0, j]
 
-        # print('W base pairs', bp_idxs)
         self.pairs = bp_idxs
         self.dot = self.write_dot(bp_idxs)
         return self.dot
@@ -296,32 +289,3 @@ class Zuker:
             dot[bp2] = ')'
         
         return ''.join(dot)
-
-if __name__ == "__main__":
-    RNA_trivial = 'AU' * 20
-    RNA_hw = 'AUGCGGGGAUCGUCGAGAU'
-    RNA_hair = 'GGGAAAUCC'
-    RNA_multi = 'GGGAAACCCAAAGGGUUUCCCAAAGGGAAACCC'
-    RNA_hard = 'UUUAUUGGGCCUAAAGCGUCCGUAGCCGGGCUGGUAAGUCCUCCGGGAAAUCUGGCGGCUUAACCGUCAGACUGCCGGAGGAUACUGCCAGCCUAGGGACCGGGAGAGGCCGGGGGUAUUCCCGGAGUAGGGGUGAAAUCCUGUAAUCCCGGGAGGACCACCUGUGGCGAAGGCGCCCGGCUGGAACGGGUCCGACGGUGAGGGACGAAGGCCAGGGGAGCGAACCGGAUUAGAUACCCGGGUAGUCCUGGCUGUAAACGAUGCGGACUAGGUGUCACCGAAGCUACGAGCUUCGGUGGUGCCGGAGGGAAGCCGUUAAGUCCGCCGCCUGGGGAGUACGGCCGCAAGGCUGAAACUUA'           # 16S_rRNA-A.fulgidus_domain2
-    canon_structure = '.......(((((...(.((((.(.(((.(((((((.((((((((((.....(((((((.....)))))))....))))))))..)))))))))...((((((.....(((((((((..(((((((....(((......))).......)))))))..)).......((....)).)))))))....))).)))...))))..))))....((((((...((...((((.........))))...))))))))..........((((((..((((((((((((((.....))))))))))))))...((..)))).....)))))))))).(((......((((....))))....))).'
-    RNA_tRNA_Phe = 'GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA'
-    canon_structure = '(((((((..((((........)))).(((((.......))))).....(((((.......))))))))))))....'
-    z = Zuker(RNA_multi)
-    # print('Length', z.n)
-    # print('V shape:', z.V.shape)
-    # print('W shape:', z.W.shape)
-    print('MFE:', z.mfe)
-    # print('WM:')
-    # print(z.WM)
-    # print('V:')
-    # print(z.V)
-    # print("W:")
-    # print(z.W)
-    # print("W pointers:")
-    # print(z.W_pointers)
-    # print("V pointers:")
-    # print(z.V_pointers)
-    # print("WM pointers:")
-    # print(z.WM_pointers)
-    print('Dot:', z.backtrace())
-    # print('w00', z.W_pointers[0][z.n-1])
