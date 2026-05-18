@@ -10,14 +10,14 @@ External libraries used:
 - `lookup.lookup.py`: Handles energy lookup tables for stacking, hairpin, bulge, internal, and multiloop energies. Parses data files and creates JSON caches.
 - `lookup.stack.json`, `lookup.bulge.json`, `lookup.hairpin.json`, `lookup.internal.json`: JSON files containing precomputed energy values.
 - `algos.zuker.py`: Main implementation of the Zuker algorithm, including DP tables (V, W, WM) and backtracing for structure prediction.
-- `algos.nussinov.py`: Minor implementation of the Nussinov to compare to our implementation of Zuker.
+- `algos.nussinov.py`: Minor implementation of the Nussinov algorithm to compare to our implementation of Zuker.
 - `validation.py`: Scripts for validating the implementation against known structures and datasets.
 
 ## Zuker class details
-The Zuker class takes in RNA string $S \in {G, C, A, U}^n$ and computes a simplistic Zuker algorithm implementation for RNA Secondary Structure Prediction by minimizing minimum free energy. It also takes optional arguments `min_loop`, `offset`, `helix`, and `unpaired_nuc` representing the minimum loop size, multiloop initiation penalty, multiloop helix/branch penalty, and multiloop unpaired nucleotides penalty respectfully. The class has the following attributes:
+The Zuker class takes in RNA string $S \in \{G, C, A, U\}^n$ and computes a simplistic Zuker algorithm implementation for RNA secondary structure prediction by minimizing minimum free energy. It also takes optional arguments `min_loop`, `offset`, `helix`, and `unpaired_nuc` representing the minimum loop size, multiloop initiation penalty, multiloop helix/branch penalty, and multiloop unpaired nucleotides penalty respectfully. The class has the following attributes:
 - `self.seq`: the original RNA sequence
 - `self.n`: length of the RNA sequence
-- `self.lookup`: the lookup table used to calculate the free energies of hairpins loops, stacking base pairs, and internal/budge loops
+- `self.lookup`: the lookup table used to calculate the free energies of hairpin loops, stacking base pairs, and internal/budge loops
 - `self.W`: the resulting W matrix from the algorithm
 - `self.V`: the resulting V matrix from the algorithm
 - `self.WM`: the resulting WM matrix from the algorithm
@@ -37,11 +37,11 @@ The Zuker class takes in RNA string $S \in {G, C, A, U}^n$ and computes a simpli
 
 ### Dataset: ArchiveII
 - Source: [Hugging Face ArchiveII Dataset](https://huggingface.co/datasets/multimolecule/archiveii)
-- Provides RNA sequences and corresponding dot-bracket notations for comparison.
+- Provides RNA sequences and corresponding dot-parentheses notations for comparison.
 
 Validation was performed with the following steps:
 
-1. Call the Zuker algorithm on all sequences in the dataset and retrieve a list of the predicted base pairs (a list of tuples representing the indices that paired).
+1. Call the Zuker algorithm on all sequences in the dataset and retrieve a list of the predicted base pairs (a list of lists representing the indices that paired).
 
 2. Represent the base pairs in the actual solution as a list of the predicted base pairs.
 
@@ -61,6 +61,7 @@ We created graphs showing that our algorithm runs in $O(n^3)$:
 ![](graphs/runtime_graphs.png)
 
 ## Citations
-- Lookup table data files: [RNAstructure] (https://rna.urmc.rochester.edu/Overview/index.html)
-- Algorithm: [Zuker Algorithm Slides](https://math.mit.edu/classes/18.417/Slides/rna-prediction-zuker.pdf)
 - Dataset: [ArchiveII on Hugging Face](https://huggingface.co/datasets/multimolecule/archiveii)
+- Lookup table data files: [RNAstructure] (https://rna.urmc.rochester.edu/Overview/index.html)
+- Nussinov algorithm: (https://www.pnas.org/doi/epdf/10.1073/pnas.77.11.6309)
+- Zuker algorithm: (https://pmc.ncbi.nlm.nih.gov/articles/PMC326673/)
